@@ -45,18 +45,20 @@ class DataBase:
     def construct_update_query(params:Namespace, is_task=False) -> str:
         table = 'tasks' if is_task else 'projects'
         params = validate_input(params)
-        row = [
-            f"name='{params.name if params.name else ""}'",
-            f"description='{params.description if params.description else ""}'",
-            f"start_date='{params.start_date if params.start_date else ""}'",
-            f"end_date='{params.end_date if params.end_date else ""}'",
-            f"status='{params.status if params.status else "''"}'"
-        ]
-
+        row = []
+        if params.name:
+            row.append(f"name='{params.name}'")
+        if params.description:
+            row.append(f"description='{params.description}'")
+        if params.start_date:
+            row.append(f"start_date='{params.start_date}'")
+        if params.end_date:
+            row.append(f"end_date='{params.end_date}'")
+        if params.status:
+            row.append(f"status='{params.status}'")
         if is_task:
             row.append(f"project_id='{params.project_id}'")
-        query = f"UPDATE {table} SET {', '.join(row)} WHERE id='{params.task_id if is_task else params.project_id}' RETURNING id, name, "\
-                "description, start_date, end_date, status;"
+        query = f"UPDATE {table} SET {', '.join(row)} WHERE id='{params.task_id if is_task else params.project_id}' RETURNING id, name;"
         return query
 
     @staticmethod
@@ -65,10 +67,12 @@ class DataBase:
         filter_str = ''
         if is_task and params.task_id:
             filter_str += f" id='{params.task_id}' "
-        if params.project_id:
+        if is_task and params.project_id:
             if filter_str:
                 filter_str += 'AND'
             filter_str += f" project_id='{params.project_id}' "
+        elif not is_task and params.project_id:
+            filter_str += f" id='{params.project_id}'"
         return f"DELETE FROM {table} WHERE{filter_str}RETURNING id, name;"
 
 
@@ -148,18 +152,29 @@ db = DataBase()
 def create_row(args, is_task=False):
     query = db.construct_create_query(args, is_task)
     response = db.execute_query(query)
-    print("Task" if is_task else "Project" + "is created successfully.")
+    if response:
+        print("Successfully created " + ("Task" if is_task else "Project") + " with Id " + str(response[0][0]))
     return response
 
 def update_row(args, is_task=False):
     query = db.construct_update_query(args, is_task)
     response = db.execute_query(query)
+    if response:
+        print("Successfully updated " + ("Task" if is_task else "Project") + str(response[0][0]) + '. ' + response[0][1])
     return  response
 
 def list_row(args, is_task=False):
     query = db.construct_list_query(args, is_task)
     response = db.execute_query(query)
-    result = []
+    if len(response) == 0:
+        print('No ' + ('tasks' if is_task else 'projects') + ' found.')
+        return None
+    print('Found ' + str(len(response))+ ' ' + ('tasks' if is_task else 'projects'))
+    headers = ["Id"]
+    if is_task:
+        headers.append("Project ID")
+    headers.extend(["Name", "Start Date", "End Date", "Status", "Created Date", "Description"])
+    result = [headers]
     if response:
         for res in response:
             start_date = datetime.strftime(res[3], "%Y-%m-%d %H:%M:%S")
@@ -191,6 +206,8 @@ def list_row(args, is_task=False):
 def delete_row(args, is_task=False):
     query = db.construct_delete_query(args, is_task)
     response = db.execute_query(query)
+    if response:
+        print("Successfully deleted " + ("Task" if is_task else "Project") + " with Id " + str(response[0][0]))
     return response
 
 def column_max_length(arr):

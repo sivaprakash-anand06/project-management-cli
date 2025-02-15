@@ -82,22 +82,23 @@ def get_arguments():
 def main():
     args = get_arguments()
     if args.command == "create-project":
-            response = create_row(args)
+            create_row(args)
     elif args.command == "update-project":
-            response = update_row(args)
+            update_row(args)
     elif args.command == "list-projects":
             response = list_row(args)
-            print_result(response)
+            if response:
+                print_result(response)
     elif args.command == "delete-project":
-            response = delete_row(args)
+            delete_row(args)
     elif args.command == "create-task":
-            response = create_row(args, is_task=True)
+            create_row(args, is_task=True)
     elif args.command == "update-task":
-            response = update_row(args, is_task=True)
+            update_row(args, is_task=True)
     elif args.command == "list-tasks":
-            response = list_row(args, is_task=True)
+            list_row(args, is_task=True)
     elif args.command == "delete-tasks":
-            response = delete_row(args, is_task=True)
+            delete_row(args, is_task=True)
 
 
 if __name__ == "__main__":
