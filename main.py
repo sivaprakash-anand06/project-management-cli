@@ -8,7 +8,7 @@ load_dotenv(".env")
 def get_arguments():
     parser = argparse.ArgumentParser(
         prog="project-cli",
-        description="A basic project management CLI tool. Supports commands like create-task, update-task, and list-tasks."
+        description="A simple project management CLI tool. Supports commands like create-task, update-task, and list-tasks."
     )
 
     subparsers = parser.add_subparsers(title="Commands", description="Available commands", dest="command")
@@ -35,7 +35,13 @@ def get_arguments():
     delete_project_args = subparsers.add_parser("delete-project", help="delete the projects.")
     delete_project_args.add_argument("project_id", type=int, help="ID of the project to delete")
 
-    subparsers.add_parser("list-projects", help="list the projects.")
+    list_project_args = subparsers.add_parser("list-projects", help="list the projects.")
+    list_project_args.add_argument("--name", type=str, help="Name of the task")
+    list_project_args.add_argument("--start-date", type=str, help="Start date of the task (YYYY-MM-DD)")
+    list_project_args.add_argument("--end-date", type=str, help="End date of the task (YYYY-MM-DD)")
+    list_project_args.add_argument("--status", type=str, choices=["to-do", "on-going", "done"],
+                                default="to-do", help="Current status of the task")
+    list_project_args.add_argument("--created-date", type=str, help="Created date of the task (YYYY-MM-DD)")
 
     # # Task commands
     create_task_args = subparsers.add_parser("create-task", help="Create a new task.")
@@ -65,7 +71,7 @@ def get_arguments():
 
 
     list_task_args = subparsers.add_parser("list-tasks", help="list the tasks.")
-    list_task_args.add_argument('--project-id', type=str,
+    list_task_args.add_argument('--project-id', type=str, default='1',
                                   help="Enter project id under which the task needs to be created.")
 
     # Parse the arguments
@@ -76,21 +82,22 @@ def get_arguments():
 def main():
     args = get_arguments()
     if args.command == "create-project":
-            create_row(args)
+            response = create_row(args)
     elif args.command == "update-project":
-            update_row(args)
+            response = update_row(args)
     elif args.command == "list-projects":
-            list_row(args)
+            response = list_row(args)
+            print_result(response)
     elif args.command == "delete-project":
-            delete_row(args)
+            response = delete_row(args)
     elif args.command == "create-task":
-            create_row(args, is_task=True)
+            response = create_row(args, is_task=True)
     elif args.command == "update-task":
-            update_row(args, is_task=True)
+            response = update_row(args, is_task=True)
     elif args.command == "list-tasks":
-            list_row(args, is_task=True)
+            response = list_row(args, is_task=True)
     elif args.command == "delete-tasks":
-            delete_row(args, is_task=True)
+            response = delete_row(args, is_task=True)
 
 
 if __name__ == "__main__":

@@ -75,8 +75,9 @@ class DataBase:
     @staticmethod
     def construct_list_query(args, is_task=False) -> str:
         table = 'tasks' if is_task else 'projects'
-        return (f"SELECT id, name, description, start_date, end_date, status, created_at FROM {table} "
-                f"{"" if not is_task else ('WHERE project_id=' + args.project_id)} ORDER BY created_at DESC;")
+        return (f"SELECT id, name, description, start_date, end_date, status, created_at{', project_id' if is_task else ''}"
+                f" FROM {table} {"" if not is_task else ('WHERE project_id=' + args.project_id)} "
+                f"ORDER BY created_at DESC;")
 
 
 def normalize_datetime(user_input):
@@ -146,16 +147,66 @@ def validate_input(params: Namespace) -> Namespace:
 db = DataBase()
 def create_row(args, is_task=False):
     query = db.construct_create_query(args, is_task)
-    print(db.execute_query(query))
+    response = db.execute_query(query)
+    print("Task" if is_task else "Project" + "is created successfully.")
+    return response
 
 def update_row(args, is_task=False):
     query = db.construct_update_query(args, is_task)
-    print(db.execute_query(query))
+    response = db.execute_query(query)
+    return  response
 
 def list_row(args, is_task=False):
     query = db.construct_list_query(args, is_task)
-    print(db.execute_query(query))
+    response = db.execute_query(query)
+    result = []
+    if response:
+        for res in response:
+            start_date = datetime.strftime(res[3], "%Y-%m-%d %H:%M:%S")
+            end_date = datetime.strftime(res[4], "%Y-%m-%d %H:%M:%S")
+            created_date = datetime.strftime(res[6], "%Y-%m-%d %H:%M:%S")
+            if args.name and args.name != res[1]:
+                continue
+            if args.start_date and args.start_date != start_date:
+                continue
+            if args.end_date and args.end_date != end_date:
+                continue
+            if args.created_date and args.created_date != created_date:
+                continue
+            result.append([str(res[0])])
+            if is_task:
+                result[-1].append(
+                    str(res[-1])
+                )
+            result[-1].extend([
+                res[1],
+                start_date,
+                end_date,
+                res[5],
+                created_date,
+                res[2]
+            ])
+    return result
 
 def delete_row(args, is_task=False):
     query = db.construct_delete_query(args, is_task)
-    print(db.execute_query(query))
+    response = db.execute_query(query)
+    return response
+
+def column_max_length(arr):
+    max_count = [0]*len(arr[0])
+    for col in range(len(arr[0])):
+        max_len = 0
+        for row in range(len(arr)):
+            max_len = max(max_len, len(arr[row][col]))
+        max_count[col] = max_len
+    return max_count
+
+def print_result(arr):
+    col_len = column_max_length(arr)
+    print_str = ""
+    for row in range(len(arr)):
+        for col in range(len(arr[0])):
+            print_str += arr[row][col] + ' ' * ((col_len[col] - len(arr[row][col])) + 5)
+        print_str += "\n"
+    print(print_str)
