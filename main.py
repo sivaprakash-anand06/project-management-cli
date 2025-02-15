@@ -73,12 +73,12 @@ def get_arguments():
     list_task_args = subparsers.add_parser("list-tasks", help="list the tasks.")
     list_task_args.add_argument('--project-id', type=str, default='1',
                                   help="Enter project id under which the task needs to be created.")
-    list_project_args.add_argument("--name", type=str, help="Name of the task")
-    list_project_args.add_argument("--start-date", type=str, help="Start date of the task (YYYY-MM-DD)")
-    list_project_args.add_argument("--end-date", type=str, help="End date of the task (YYYY-MM-DD)")
-    list_project_args.add_argument("--status", type=str, choices=["to-do", "on-going", "done"],
+    list_task_args.add_argument("--name", type=str, help="Name of the task")
+    list_task_args.add_argument("--start-date", type=str, help="Start date of the task (YYYY-MM-DD)")
+    list_task_args.add_argument("--end-date", type=str, help="End date of the task (YYYY-MM-DD)")
+    list_task_args.add_argument("--status", type=str, choices=["to-do", "on-going", "done"],
                                 default="to-do", help="Current status of the task")
-    list_project_args.add_argument("--created-date", type=str, help="Created date of the task (YYYY-MM-DD)")
+    list_task_args.add_argument("--created-date", type=str, help="Created date of the task (YYYY-MM-DD)")
 
     # Parse the arguments
     args = parser.parse_args()
